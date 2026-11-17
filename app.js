@@ -5,7 +5,7 @@ const mini = new URLSearchParams(location.search).has('mini');
 document.body.classList.toggle('mini',mini);
 $('popup').hidden = mini;
 $('history-open').hidden = mini;
-$('install').hidden = mini;
+if(mini)$('install').hidden=true;
 let volatileState=initialState();
 let stateSaved=true;
 function read() {
