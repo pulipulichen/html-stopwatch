@@ -6,7 +6,7 @@ from PIL import Image
 
 target = Path(sys.argv[1] if len(sys.argv) > 1 else "_site")
 target.mkdir(parents=True, exist_ok=True)
-for filename in ("index.html", "style.css", "app.js", "timer.js", "manifest.webmanifest", ".nojekyll"):
+for filename in ("index.html", "style.css", "app.js", "timer.js", "history.js", "manifest.webmanifest", ".nojekyll"):
     shutil.copy2(filename, target / filename)
 assets = target / "assets"
 assets.mkdir(exist_ok=True)
