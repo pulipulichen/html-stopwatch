@@ -1,0 +1,26 @@
+{
+  "id": "./",
+  "name": "HTML Stopwatch",
+  "short_name": "Stopwatch",
+  "description": "精巧線上碼錶，支援毫秒與同步迷你視窗",
+  "lang": "zh-Hant",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#101820",
+  "theme_color": "#101820",
+  "icons": [
+    {
+      "src": "./assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
