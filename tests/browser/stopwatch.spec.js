@@ -7,6 +7,7 @@ test('keyboard, editing, compact title, popup synchronization and clipboard',asy
  await expect(page.locator('#toggle')).toHaveText('暫停');
  await expect.poll(()=>page.locator('#fraction').textContent()).not.toBe('.000');
  await page.keyboard.press('Space');
+ await expect(page.locator('#toggle')).toHaveText('開始');
  const frozen=await page.locator('#timer').textContent();
  await page.waitForTimeout(200);
  expect(await page.locator('#timer').textContent()).toBe(frozen);
@@ -35,6 +36,7 @@ test('keyboard, editing, compact title, popup synchronization and clipboard',asy
  await page.reload();
  await expect(page.locator('#toggle')).toHaveText('暫停');
  await page.locator('#toggle').click();
+ await expect(page.locator('#toggle')).toHaveText('開始');
  await page.locator('#copy').click();
  const copied=await page.evaluate(()=>navigator.clipboard.readText());
  expect(copied).toMatch(/^\d{2}:\d{2}:\d{2}\.\d{3}$/);
