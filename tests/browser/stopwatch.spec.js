@@ -56,9 +56,13 @@ test('narrow layout, overflow-only marquee, manifest and no offline cache',async
  await page.locator('#reset').click();
  await expect(page.locator('#title-text')).toHaveText('Short');
  await expect.poll(()=>page.locator('#title-track').evaluate(el=>el.getAnimations().length)).toBe(0);
- const manifest=await page.evaluate(async()=> (await fetch('./manifest.webmanifest')).json());
+ const manifestHref=await page.locator('link[rel="manifest"]').getAttribute('href');
+ expect(manifestHref).toContain('?v=c9734dd');
+ const manifest=await page.evaluate(async url=> (await fetch(url)).json(),manifestHref);
  expect(manifest.start_url).toBe('./');expect(manifest.display).toBe('standalone');
- for(const icon of manifest.icons){const response=await page.request.get(icon.src);expect(response.ok()).toBe(true);}
+ const documentIcons=await page.locator('link[rel="icon"], link[rel="apple-touch-icon"], img.app-icon').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('href')||node.getAttribute('src')));
+ expect(documentIcons).toHaveLength(3);expect(documentIcons.every(src=>src?.includes('?v=c9734dd'))).toBe(true);
+ for(const icon of manifest.icons){expect(icon.src).toContain('?v=c9734dd');const response=await page.request.get(icon.src);expect(response.ok()).toBe(true);}
  expect(await page.evaluate(()=>navigator.serviceWorker.getRegistrations().then(r=>r.length))).toBe(0);
  expect(await page.evaluate(()=>caches.keys())).toEqual([]);
 });
