@@ -20,10 +20,10 @@ test('keyboard, editing, compact title, popup synchronization and clipboard',asy
  await page.keyboard.press('Space');
  await expect(page.locator('#toggle')).toHaveText('開始');
  await page.keyboard.press('Enter');
- await expect(page).toHaveTitle(/ - Meeting $/);
+ await expect(page).toHaveTitle(/ - Meeting$/);
  const [popup]=await Promise.all([page.waitForEvent('popup'),page.locator('#popup').click()]);
  await popup.waitForLoadState();
- await expect(popup.locator('#title-text')).toHaveText('Meeting ');
+ await expect(popup.locator('#title-text')).toHaveText('Meeting');
  await popup.locator('#reset').click();
  await expect(page.locator('#timer')).toHaveText('00:00:00.000');
  await popup.locator('#title-button').click();

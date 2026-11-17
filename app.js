@@ -73,7 +73,7 @@ function startEditing() {
 function finishEditing(save) {
   if(!editing)return;
   editing=false;
-  const title=$('title-input').value;
+  const title=$('title-input').value.trim();
   $('title-input').hidden=true; $('title-button').hidden=false;
   if(save) dispatch({type:'title',title});
   else renderState();
