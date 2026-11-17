@@ -1,5 +1,6 @@
 import {STORAGE_KEY,now,initialState,validState,elapsedAt,transition,formatTime} from './timer.js';
 import {HISTORY_PREFIX,createHistoryEntry,createHistoryStore,formatHistoryDate,formatHistoryDuration} from './history.js';
+import {resizeMiniWindow} from './popup.js';
 const $ = id => document.getElementById(id);
 const mini = new URLSearchParams(location.search).has('mini');
 document.body.classList.toggle('mini',mini);
@@ -176,8 +177,10 @@ $('popup').onclick=()=>{
     return range.getBoundingClientRect().width;
   }));
   const miniButtonRowWidth=(buttonLabelWidth+10)*3+8;
-  const width=Math.ceil(Math.max(180,Math.max(miniTimerWidth,miniButtonRowWidth)+32));
-  popup=window.open(url.href,'_blank',`popup=yes,width=${width},height=128,resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,status=no`);
+  const width=Math.min(480,Math.ceil(Math.max(180,Math.max(miniTimerWidth,miniButtonRowWidth)+32)));
+  url.searchParams.set('miniWidth',String(width));
+  const left=Math.round(window.screenX+24), top=Math.round(window.screenY+24);
+  popup=window.open(url.href,'_blank',`popup=yes,width=${width},height=128,left=${left},top=${top},resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,status=no`);
   if(!popup)status('請允許彈出式視窗');
 };
 window.addEventListener('beforeinstallprompt',event=>{
@@ -192,6 +195,28 @@ $('install').onclick=async()=>{
 };
 window.addEventListener('appinstalled',()=>{$('install').hidden=true;installPrompt=null;});
 new ResizeObserver(marquee).observe($('title-button'));
+if(mini && window.opener) {
+  const width=Math.min(480,Math.max(180,Number(new URLSearchParams(location.search).get('miniWidth'))||180));
+  const oversized=()=>window.innerWidth>width+64 || window.innerHeight>200;
+  const updateRecovery=()=>{
+    $('popup').hidden=!oversized();
+    $('popup').textContent='↙';
+    $('popup').setAttribute('aria-label','縮小視窗');
+    $('popup').title='縮小視窗；若無效，請先按視窗右上角「還原」';
+  };
+  const correct=()=>{resizeMiniWindow(window,width);updateRecovery();};
+  $('popup').onclick=()=>{
+    correct();
+    setTimeout(()=>{updateRecovery();if(oversized())status('請先按視窗右上角「還原」');},400);
+  };
+  // Two startup attempts only, allowing native window creation to settle.
+  // Resize events and content changes must never trigger another correction.
+  const start=()=>{correct();setTimeout(correct,350);};
+  if(document.readyState==='complete')start();
+  else window.addEventListener('load',start,{once:true});
+  window.addEventListener('resize',updateRecovery);
+}
+
 matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change',marquee);
 function frame(){if(!document.hidden)renderTime();requestAnimationFrame(frame);}
 renderState();requestAnimationFrame(frame);

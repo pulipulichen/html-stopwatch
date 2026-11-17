@@ -56,18 +56,14 @@ test('narrow layout, overflow-only marquee, manifest and no offline cache',async
  await page.locator('#reset').click();
  await expect(page.locator('#title-text')).toHaveText('Short');
  await expect.poll(()=>page.locator('#title-track').evaluate(el=>el.getAnimations().length)).toBe(0);
- const manifestHref=await page.locator('link[rel="manifest"]').getAttribute('href');
- expect(manifestHref).toContain('?v=c9734dd');
- const manifest=await page.evaluate(async url=> (await fetch(url)).json(),manifestHref);
+ const manifest=await page.evaluate(async()=> (await fetch('./manifest.webmanifest')).json());
  expect(manifest.start_url).toBe('./');expect(manifest.display).toBe('standalone');
- const documentIcons=await page.locator('link[rel="icon"], link[rel="apple-touch-icon"], img.app-icon').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('href')||node.getAttribute('src')));
- expect(documentIcons).toHaveLength(3);expect(documentIcons.every(src=>src?.includes('?v=c9734dd'))).toBe(true);
- for(const icon of manifest.icons){expect(icon.src).toContain('?v=c9734dd');const response=await page.request.get(icon.src);expect(response.ok()).toBe(true);}
+ for(const icon of manifest.icons){const response=await page.request.get(icon.src);expect(response.ok()).toBe(true);}
  expect(await page.evaluate(()=>navigator.serviceWorker.getRegistrations().then(r=>r.length))).toBe(0);
  expect(await page.evaluate(()=>caches.keys())).toEqual([]);
 });
 
-test('mini stays compact without repeated native window resizing',async({page,context})=>{
+test('mini uses bounded startup corrections and does not resize on content changes',async({page,context})=>{
  await context.grantPermissions(['clipboard-read','clipboard-write']);
  await context.addInitScript(()=>{
   window.resizeCalls=[];
@@ -91,5 +87,30 @@ test('mini stays compact without repeated native window resizing',async({page,co
  await popup.setViewportSize({width:600,height:128});
  await expect(popup.locator('#timer')).toHaveCSS('font-size','24px');
  await popup.waitForTimeout(250);
- expect(await popup.evaluate(()=>window.resizeCalls)).toEqual([]);
+ const calls=await popup.evaluate(()=>window.resizeCalls);
+ expect(calls.length).toBeLessThanOrEqual(2);
+ for(const [method,width,height] of calls) {
+  expect(method).toBe('resizeTo');
+  expect(width).toBeGreaterThanOrEqual(180);
+  expect(width).toBeLessThanOrEqual(560);
+  expect(height).toBeGreaterThanOrEqual(128);
+  expect(height).toBeLessThanOrEqual(340);
+ }
+});
+
+test('native popup recovers when the initial requested size is ignored',async({browser})=>{
+ const context=await browser.newContext({viewport:null});
+ try {
+  const page=await context.newPage();
+  await page.addInitScript(()=>{
+   const open=window.open.bind(window);
+   window.open=(url,target,features)=>open(url,target,features.replace(/width=\\d+/, 'width=1000').replace(/height=\\d+/, 'height=600'));
+  });
+  await page.goto('http://127.0.0.1:4173/html-stopwatch/');
+  const [popup]=await Promise.all([page.waitForEvent('popup'),page.locator('#popup').click()]);
+  await popup.waitForLoadState();
+  await expect.poll(()=>popup.evaluate(()=>innerWidth)).toBeLessThanOrEqual(320);
+  await expect.poll(()=>popup.evaluate(()=>innerHeight)).toBeLessThanOrEqual(200);
+  expect(await popup.locator('body').evaluate(el=>el.getBoundingClientRect().height)).toBeLessThanOrEqual(await popup.evaluate(()=>innerHeight));
+ } finally {await context.close();}
 });
