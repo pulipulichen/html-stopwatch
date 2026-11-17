@@ -62,3 +62,30 @@ test('narrow layout, overflow-only marquee, manifest and no offline cache',async
  expect(await page.evaluate(()=>navigator.serviceWorker.getRegistrations().then(r=>r.length))).toBe(0);
  expect(await page.evaluate(()=>caches.keys())).toEqual([]);
 });
+
+test('mini stays compact without repeated native window resizing',async({page,context})=>{
+ await context.grantPermissions(['clipboard-read','clipboard-write']);
+ await context.addInitScript(()=>{
+  window.resizeCalls=[];
+  window.resizeTo=(...args)=>window.resizeCalls.push(['resizeTo',...args]);
+  window.resizeBy=(...args)=>window.resizeCalls.push(['resizeBy',...args]);
+ });
+ await page.goto('./');
+ const [popup]=await Promise.all([page.waitForEvent('popup'),page.locator('#popup').click()]);
+ await popup.waitForLoadState();
+ await popup.setViewportSize({width:220,height:128});
+ const bodyHeight=await popup.locator('body').evaluate(el=>el.getBoundingClientRect().height);
+ expect(bodyHeight).toBeLessThanOrEqual(128);
+ expect(bodyHeight).toBeGreaterThan(120);
+ await expect(popup.locator('#timer')).toHaveCSS('font-size','24px');
+ await popup.locator('#copy').click();
+ await expect(popup.locator('#status')).toHaveText('已複製');
+ expect(await popup.locator('body').evaluate(el=>el.getBoundingClientRect().height)).toBe(bodyHeight);
+ await expect(popup.locator('#status')).toBeEmpty({timeout:5000});
+ expect(await popup.locator('body').evaluate(el=>el.getBoundingClientRect().height)).toBe(bodyHeight);
+ // A wider viewport must not change the intended compact font or trigger a resize loop.
+ await popup.setViewportSize({width:600,height:128});
+ await expect(popup.locator('#timer')).toHaveCSS('font-size','24px');
+ await popup.waitForTimeout(250);
+ expect(await popup.evaluate(()=>window.resizeCalls)).toEqual([]);
+});

@@ -177,7 +177,7 @@ $('popup').onclick=()=>{
   }));
   const miniButtonRowWidth=(buttonLabelWidth+10)*3+8;
   const width=Math.ceil(Math.max(180,Math.max(miniTimerWidth,miniButtonRowWidth)+32));
-  popup=window.open(url.href,'html-stopwatch-mini',`popup=yes,width=${width},height=128,resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,status=no`);
+  popup=window.open(url.href,'_blank',`popup=yes,width=${width},height=128,resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,status=no`);
   if(!popup)status('請允許彈出式視窗');
 };
 window.addEventListener('beforeinstallprompt',event=>{
@@ -192,23 +192,6 @@ $('install').onclick=async()=>{
 };
 window.addEventListener('appinstalled',()=>{$('install').hidden=true;installPrompt=null;});
 new ResizeObserver(marquee).observe($('title-button'));
-if(mini && window.opener) {
-  let fitFrame=null;
-  const fitHeight=()=>{
-    cancelAnimationFrame(fitFrame);
-    fitFrame=requestAnimationFrame(()=>{
-      // Measure content, not scrollHeight: scrollHeight includes unused viewport space.
-      const padding=getComputedStyle(document.body);
-      const height=Math.ceil(document.querySelector('main').getBoundingClientRect().height
-        +parseFloat(padding.paddingTop)+parseFloat(padding.paddingBottom));
-      const difference=height-window.innerHeight;
-      if(difference!==0)window.resizeTo(window.outerWidth,window.outerHeight+difference);
-    });
-  };
-  new ResizeObserver(fitHeight).observe(document.querySelector('main'));
-  window.addEventListener('load',fitHeight,{once:true});
-  document.fonts.ready.then(fitHeight);
-}
 matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change',marquee);
 function frame(){if(!document.hidden)renderTime();requestAnimationFrame(frame);}
 renderState();requestAnimationFrame(frame);

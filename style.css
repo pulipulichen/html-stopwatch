@@ -23,6 +23,8 @@ button:focus-visible,input:focus-visible{outline:2px solid #62d6bc;outline-offse
 #status{grid-column:1/-1;min-width:0;font-size:11px;color:#b7c9d4;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 #status:empty{display:none}
 body.mini{padding:6px}
+body.mini #timer{font-size:24px}
+body.mini #status{position:fixed;top:6px;left:6px;right:6px;z-index:1;height:30px;line-height:30px;padding:0 6px;border-radius:4px;background:#1b2832;pointer-events:none}
 @media(max-width:260px){button{padding:3px 4px}.controls{gap:4px}.controls>button{padding-inline:4px}}
 @media(max-width:150px){.controls>button{font-size:clamp(10px,8vw,12px);white-space:normal;overflow-wrap:anywhere}}
 
