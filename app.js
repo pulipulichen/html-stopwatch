@@ -5,6 +5,7 @@ const mini = new URLSearchParams(location.search).has('mini');
 document.body.classList.toggle('mini',mini);
 $('popup').hidden = mini;
 $('history-open').hidden = mini;
+$('install').hidden = mini;
 let volatileState=initialState();
 let stateSaved=true;
 function read() {
@@ -165,11 +166,24 @@ $('copy').onclick=async()=>{
 $('popup').onclick=()=>{
   if(popup && !popup.closed){popup.focus();return;}
   const url=new URL('./',location.href);url.searchParams.set('mini','1');
-  popup=window.open(url.href,'html-stopwatch-mini','popup=yes,width=300,height=145,resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,status=no');
+  const range=document.createRange();
+  range.selectNodeContents($('timer'));
+  const timerTextWidth=range.getBoundingClientRect().width;
+  const timerFontSize=parseFloat(getComputedStyle($('timer')).fontSize)||24;
+  const miniTimerWidth=timerTextWidth*24/timerFontSize;
+  const buttonLabelWidth=Math.max(...[...document.querySelectorAll('.controls>button')].map(button=>{
+    range.selectNodeContents(button);
+    return range.getBoundingClientRect().width;
+  }));
+  const miniButtonRowWidth=(buttonLabelWidth+10)*3+8;
+  const width=Math.ceil(Math.max(180,Math.max(miniTimerWidth,miniButtonRowWidth)+32));
+  popup=window.open(url.href,'html-stopwatch-mini',`popup=yes,width=${width},height=175,resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,status=no`);
   if(!popup)status('請允許彈出式視窗');
 };
 window.addEventListener('beforeinstallprompt',event=>{
-  event.preventDefault();installPrompt=event;$('install').hidden=false;
+  event.preventDefault();
+  if(mini)return;
+  installPrompt=event;$('install').hidden=false;
 });
 $('install').onclick=async()=>{
   if(!installPrompt)return;
