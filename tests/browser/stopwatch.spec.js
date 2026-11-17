@@ -39,7 +39,7 @@ test('keyboard, editing, compact title, popup synchronization and clipboard',asy
  await expect(page.locator('#toggle')).toHaveText('開始');
  await page.locator('#copy').click();
  const copied=await page.evaluate(()=>navigator.clipboard.readText());
- expect(copied).toMatch(/^\d{2}:\d{2}:\d{2}\.\d{3}$/);
+ expect(copied).toMatch(/^Shared title\t\d{2}:\d{2}\.\d{3}$/);
  await page.keyboard.press('Escape');
  await expect(popup.locator('#timer')).toHaveText('00:00:00.000');
 });

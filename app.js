@@ -155,9 +155,12 @@ document.addEventListener('keydown',event=>{
   if(event.key==='Escape'){event.preventDefault();dispatch({type:'reset'});}
 });
 $('copy').onclick=async()=>{
-  const text=formatTime(elapsedAt(state,now()));
+  const formattedTime=formatTime(elapsedAt(state,now()));
+  const duration=formattedTime.startsWith('00:')?formattedTime.slice(3):formattedTime;
+  const title=state.title.trim()?state.title:'HTML Stopwatch';
+  const text=`${title}\t${duration}`;
   try { await navigator.clipboard.writeText(text); status('已複製'); }
-  catch { status('複製失敗'); window.prompt('請複製目前時間',text); }
+  catch { status('複製失敗'); window.prompt('請複製標題與時間',text); }
 };
 $('popup').onclick=()=>{
   if(popup && !popup.closed){popup.focus();return;}
